@@ -485,7 +485,7 @@ export const TorusFourBoards = ({
   }, [])
 
   useEffect(() => {
-    if (mode === 'otb') return
+    if (mode !== 'human') return
     const payload: PersistedLocalGameV2 = {
       v: 2,
       fen: snapshot.fen,

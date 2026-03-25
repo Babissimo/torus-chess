@@ -29,13 +29,13 @@ function persistedToSnapshot(p: {
 }
 
 function HomeRedirect() {
-  const saved = loadLocalGame('correspondence')
+  const saved = loadLocalGame('human')
   const to = saved ? buildGamePathname(persistedToSnapshot(saved)) : DEFAULT_GAME_PATHNAME
   return <Navigate to={to} replace />
 }
 
 function GameShell() {
-  const [gameMode, setGameMode] = useState<GameMode>('correspondence')
+  const [gameMode, setGameMode] = useState<GameMode>('human')
   const [boardKey, setBoardKey] = useState(0)
   const loc = useLocation()
   const navigate = useNavigate()
@@ -62,33 +62,25 @@ function GameShell() {
   }
 
   const modeDescription =
-    gameMode === 'otb'
-      ? 'Over the board: two players, one device. The URL updates as you play (share the address bar).'
-      : gameMode === 'correspondence'
-        ? 'Correspondence: URL + local storage keep the position in this browser.'
-        : 'Vs bot: you play White; a simple random-move bot plays Black.'
+    gameMode === 'human'
+      ? 'Vs human: two players; the URL and local storage keep the position in this browser (share the link to resume elsewhere).'
+      : 'Vs bot: you play White; a simple random-move bot plays Black.'
 
   return (
     <main className="app-shell">
       <header className="app-header">
         <h1>Torus Chess</h1>
         <p>
-          Stage 2: torus 8×8 (wrapped edges), custom start (Black on ranks 5–6, pawns move toward
-          decreasing rank). Legal moves only; check highlight; underpromotion when applicable.
+          Chess on a doughnut: the board wraps on all sides, so a rook can fall off one edge and
+          reappear on the other. This variant uses a custom opening setup—two armies face each other
+          on the torus with familiar pieces and rules adapted to the wrap.
         </p>
         <p className="app-mode-line">{modeDescription}</p>
         <div className="app-actions" role="group" aria-label="Start a new game">
           <span className="app-actions-label">New game</span>
           <div className="app-actions-row">
-            <button type="button" className="app-button" onClick={() => startNewGame('otb')}>
-              Over the board
-            </button>
-            <button
-              type="button"
-              className="app-button"
-              onClick={() => startNewGame('correspondence')}
-            >
-              Correspondence
+            <button type="button" className="app-button" onClick={() => startNewGame('human')}>
+              Vs human
             </button>
             <button type="button" className="app-button" onClick={() => startNewGame('bot')}>
               Vs bot

@@ -34,7 +34,7 @@ Example: turn, castling rights, last move (`-` if none), then eight board ranks 
 
 - **Torus geometry** — Wrapping moves; four repeating Chessground tiles in a panning viewport so you can scroll the torus without hitting a hard edge.
 - **Rules** — Legal move generation, king-in-check filtering, castling rights in state and URL, last-move in URL.
-- **Modes** — Over-the-board (URL only), correspondence (URL + `localStorage`), **vs bot** (you are White; Black plays a **uniform random legal move** after a short delay).
+- **Modes** — **Vs human** (URL + `localStorage` in this browser; share the link), **vs bot** (you are White; Black plays a **uniform random legal move** after a short delay).
 - **Pawn promotion** — When a pawn hits its promotion rank, a modal offers **queen, rook, bishop, knight** (not auto-queen only).
 - **UI** — Dark chrome, check highlighting, multi-board selection highlight, drag-to-pan on empty squares; layout uses a square viewport with `min(100%, min(96vw, 900px))` and container-query-based cell sizing so the grid tracks the clipped board area.
 
@@ -50,7 +50,7 @@ Roughly in line with current priorities:
 | **Pawn promotions** | **Done** for interactive play (including underpromotion). Further work might be bot promotion policy, animation, or URL details if extended encodings are added. |
 | **Alternative game encoding URLs** | Only the segmented `/fen/…` scheme exists today; shorter or alternate encodings (e.g. compressed state) are planned. |
 | **Fix viewport container thing** | CSS already works around Chessground bounds vs tile size and `cqmin` vs max-width clamps; remaining edge cases (alignment, resize, very small screens) are tracked for cleanup. |
-| **Undo** | Not implemented; needs a move stack (and policy for URL + bot + correspondence). |
+| **Undo** | Not implemented; needs a move stack (and policy for URL + bot + human mode). |
 | **Help menu** | No in-app rules or controls reference yet. |
 | **Rotation?** | Board orientation is fixed to White’s view everywhere; optional flip / rotate is exploratory. |
 

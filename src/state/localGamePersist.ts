@@ -1,16 +1,20 @@
 /**
  * Local game snapshot: FEN (pieces), turn, last move, castling rights (Stage 2+).
- * Each {@link GameMode} uses its own storage key so in-progress games do not overwrite each other.
+ * {@link GameMode} `human` and `bot` use separate keys so the two modes do not overwrite each other.
  */
 import { read } from 'chessground/fen'
 import type { Color, Key } from 'chessground/types'
 import { deriveCastlingFromBoard } from '../engine/torus'
 import type { CastlingRights } from '../engine/torus'
 
-/** Pre–multi-mode single key; still read once for correspondence migration. */
+/** Storage prefix; suffix is mode (`human`, `bot`) or legacy keys below. */
 export const LOCAL_GAME_STORAGE_KEY = 'torus-chess:v1-game'
 
-export type GameMode = 'otb' | 'correspondence' | 'bot'
+const LEGACY_SINGLE_KEY = LOCAL_GAME_STORAGE_KEY
+const LEGACY_CORRESPONDENCE_KEY = `${LOCAL_GAME_STORAGE_KEY}:correspondence`
+const LEGACY_OTB_KEY = `${LOCAL_GAME_STORAGE_KEY}:otb`
+
+export type GameMode = 'human' | 'bot'
 
 export function storageKeyForMode(mode: GameMode): string {
   return `${LOCAL_GAME_STORAGE_KEY}:${mode}`
@@ -90,28 +94,49 @@ function parsePersistedLocalGame(raw: string): PersistedLocalGameV2 | null {
   }
 }
 
+function removeLegacyHumanKeys(): void {
+  try {
+    localStorage.removeItem(LEGACY_CORRESPONDENCE_KEY)
+    localStorage.removeItem(LEGACY_OTB_KEY)
+    localStorage.removeItem(LEGACY_SINGLE_KEY)
+  } catch {
+    /* ignore */
+  }
+}
+
 export function loadLocalGame(mode: GameMode): PersistedLocalGameV2 | null {
   if (typeof localStorage === 'undefined') return null
   try {
-    const key = storageKeyForMode(mode)
-    let raw = localStorage.getItem(key)
-    if (!raw && mode === 'correspondence') {
-      raw = localStorage.getItem(LOCAL_GAME_STORAGE_KEY)
-      if (raw) {
-        const migrated = parsePersistedLocalGame(raw)
-        if (migrated) {
-          try {
-            localStorage.setItem(key, JSON.stringify(migrated))
-            localStorage.removeItem(LOCAL_GAME_STORAGE_KEY)
-          } catch {
-            /* quota / private mode */
-          }
-          return migrated
+    if (mode === 'bot') {
+      const raw = localStorage.getItem(storageKeyForMode('bot'))
+      if (!raw) return null
+      return parsePersistedLocalGame(raw)
+    }
+
+    const humanKey = storageKeyForMode('human')
+    let raw = localStorage.getItem(humanKey)
+    let migratedFromLegacy = false
+    if (!raw) {
+      for (const oldKey of [LEGACY_CORRESPONDENCE_KEY, LEGACY_OTB_KEY, LEGACY_SINGLE_KEY]) {
+        raw = localStorage.getItem(oldKey)
+        if (raw) {
+          migratedFromLegacy = true
+          break
         }
       }
     }
     if (!raw) return null
-    return parsePersistedLocalGame(raw)
+    const game = parsePersistedLocalGame(raw)
+    if (!game) return null
+    if (migratedFromLegacy) {
+      try {
+        localStorage.setItem(humanKey, JSON.stringify(game))
+        removeLegacyHumanKeys()
+      } catch {
+        /* quota / private mode */
+      }
+    }
+    return game
   } catch {
     return null
   }
@@ -131,8 +156,8 @@ export function clearLocalGameForMode(mode: GameMode): void {
   if (typeof localStorage === 'undefined') return
   try {
     localStorage.removeItem(storageKeyForMode(mode))
-    if (mode === 'correspondence') {
-      localStorage.removeItem(LOCAL_GAME_STORAGE_KEY)
+    if (mode === 'human') {
+      removeLegacyHumanKeys()
     }
   } catch {
     /* ignore */
