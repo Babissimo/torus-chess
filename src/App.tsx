@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import './App.css'
 import { TorusFourBoards } from './ui/TorusFourBoards'
@@ -37,6 +37,9 @@ function HomeRedirect() {
 function GameShell() {
   const [gameMode, setGameMode] = useState<GameMode>('human')
   const [boardKey, setBoardKey] = useState(0)
+  const [newGameMenuOpen, setNewGameMenuOpen] = useState(false)
+  const newGameWrapRef = useRef<HTMLDivElement>(null)
+  const newGameTriggerRef = useRef<HTMLButtonElement>(null)
   const loc = useLocation()
   const navigate = useNavigate()
 
@@ -57,6 +60,26 @@ function GameShell() {
     navigate(DEFAULT_GAME_PATHNAME, { replace: true })
   }
 
+  useEffect(() => {
+    if (!newGameMenuOpen) return
+    const wrap = newGameWrapRef.current
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setNewGameMenuOpen(false)
+        newGameTriggerRef.current?.focus()
+      }
+    }
+    const onPointerDown = (e: PointerEvent) => {
+      if (wrap && !wrap.contains(e.target as Node)) setNewGameMenuOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('pointerdown', onPointerDown)
+    }
+  }, [newGameMenuOpen])
+
   if (!parsed) {
     return <Navigate to={DEFAULT_GAME_PATHNAME} replace />
   }
@@ -76,15 +99,55 @@ function GameShell() {
           on the torus with familiar pieces and rules adapted to the wrap.
         </p>
         <p className="app-mode-line">{modeDescription}</p>
-        <div className="app-actions" role="group" aria-label="Start a new game">
-          <span className="app-actions-label">New game</span>
-          <div className="app-actions-row">
-            <button type="button" className="app-button" onClick={() => startNewGame('human')}>
-              Vs human
+        <div className="app-actions">
+          <div
+            className="app-new-game-wrap"
+            ref={newGameWrapRef}
+            onMouseEnter={() => setNewGameMenuOpen(true)}
+            onMouseLeave={() => setNewGameMenuOpen(false)}
+          >
+            <button
+              type="button"
+              ref={newGameTriggerRef}
+              className="app-button"
+              aria-expanded={newGameMenuOpen}
+              aria-haspopup="true"
+              aria-controls="new-game-options"
+              onClick={() => setNewGameMenuOpen((o) => !o)}
+            >
+              New game
             </button>
-            <button type="button" className="app-button" onClick={() => startNewGame('bot')}>
-              Vs bot
-            </button>
+            {newGameMenuOpen ? (
+              <div
+                id="new-game-options"
+                className="app-new-game-panel"
+                role="group"
+                aria-label="New game options"
+              >
+                <button
+                  type="button"
+                  className="app-button app-new-game-option"
+                  aria-label="Vs human"
+                  onClick={() => {
+                    setNewGameMenuOpen(false)
+                    startNewGame('human')
+                  }}
+                >
+                  👤⚔️👤
+                </button>
+                <button
+                  type="button"
+                  className="app-button app-new-game-option"
+                  aria-label="Vs bot"
+                  onClick={() => {
+                    setNewGameMenuOpen(false)
+                    startNewGame('bot')
+                  }}
+                >
+                  👤⚔️🤖
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       </header>
