@@ -353,7 +353,7 @@ const TorusBoardCell = ({
   return (
     <div
       ref={rootRef}
-      className="torus-cell cg-wrap"
+      className="torus-cell cg-wrap torus-chessground-board"
       data-slot-index={slotIndex}
     />
   )

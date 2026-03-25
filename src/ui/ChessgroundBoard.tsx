@@ -24,5 +24,5 @@ export const ChessgroundBoard = ({ config }: ChessgroundBoardProps) => {
     }
   }, [config])
 
-  return <div ref={rootRef} className="cg-wrap" />
+  return <div ref={rootRef} className="cg-wrap torus-chessground-board" />
 }
