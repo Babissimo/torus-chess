@@ -50,7 +50,27 @@ const TORUS_SLOT_BOARD_INDEX = [
 /** Pixels before we treat pointer movement as pan (not a click). */
 const PAN_THRESHOLD_PX = 4
 
+/** Pointer speed (px/ms) must exceed this to start coasting after release. */
+const PAN_MOMENTUM_MIN_SPEED_PX_PER_MS = 0.032
+/** Coasting ends when speed drops below this (px/ms). */
+const PAN_MOMENTUM_STOP_THRESHOLD_PX_PER_MS = 0.01
+/** Exponential damping rate for coasting velocity (per second); higher = quicker stop. */
+const PAN_MOMENTUM_FRICTION_K = 5.5
+
 type CgKeyed = HTMLElement & { cgKey?: Key }
+
+type PanDragState = {
+  pointerId: number
+  startX: number
+  startY: number
+  panAtStart: { x: number; y: number }
+  moved: boolean
+  prevClientX: number
+  prevClientY: number
+  prevTime: number
+  velocityX: number
+  velocityY: number
+}
 
 function modCentered(n: number, m: number): number {
   const r = mod(n, m)
@@ -410,13 +430,9 @@ export const TorusFourBoards = ({
   )
   const gridRef = useRef<HTMLDivElement | null>(null)
   const panPxRef = useRef({ x: 0, y: 0 })
-  const panDragRef = useRef<{
-    pointerId: number
-    startX: number
-    startY: number
-    panAtStart: { x: number; y: number }
-    moved: boolean
-  } | null>(null)
+  const panDragRef = useRef<PanDragState | null>(null)
+  const momentumRafRef = useRef<number | null>(null)
+  const momentumVelRef = useRef({ vx: 0, vy: 0 })
 
   const selectedRef = useRef<Key | null>(null)
   const legalDestsRef = useRef(legalDests)
@@ -439,6 +455,62 @@ export const TorusFourBoards = ({
   useLayoutEffect(() => {
     applyPanToDom()
   }, [applyPanToDom])
+
+  const stopMomentum = useCallback(() => {
+    if (momentumRafRef.current != null) {
+      cancelAnimationFrame(momentumRafRef.current)
+      momentumRafRef.current = null
+    }
+    momentumVelRef.current = { vx: 0, vy: 0 }
+  }, [])
+
+  const startMomentum = useCallback(
+    (vx: number, vy: number) => {
+      stopMomentum()
+      const speed = Math.hypot(vx, vy)
+      if (speed < PAN_MOMENTUM_MIN_SPEED_PX_PER_MS) return
+      momentumVelRef.current = { vx, vy }
+      let lastT = performance.now()
+      const step = (now: number) => {
+        const dt = Math.min(48, Math.max(0, now - lastT))
+        lastT = now
+
+        const grid = gridRef.current
+        if (!grid) {
+          momentumRafRef.current = null
+          return
+        }
+        const w = gridLayoutWidthPx(grid)
+        const h = gridLayoutHeightPx(grid)
+        const wrapX = 8 * (w / TILES_PER_SIDE)
+        const wrapY = 8 * (h / TILES_PER_SIDE)
+
+        const v = momentumVelRef.current
+        panPxRef.current = {
+          x: modCentered(panPxRef.current.x + v.vx * dt, wrapX),
+          y: modCentered(panPxRef.current.y + v.vy * dt, wrapY),
+        }
+
+        const decay = Math.exp(-PAN_MOMENTUM_FRICTION_K * (dt / 1000))
+        v.vx *= decay
+        v.vy *= decay
+
+        applyPanToDom()
+
+        if (Math.hypot(v.vx, v.vy) < PAN_MOMENTUM_STOP_THRESHOLD_PX_PER_MS) {
+          v.vx = 0
+          v.vy = 0
+          momentumRafRef.current = null
+          return
+        }
+        momentumRafRef.current = requestAnimationFrame(step)
+      }
+      momentumRafRef.current = requestAnimationFrame(step)
+    },
+    [applyPanToDom, stopMomentum],
+  )
+
+  useEffect(() => () => stopMomentum(), [stopMomentum])
 
   useEffect(() => {
     const onPointerEnd = (e: MouseEvent | TouchEvent) => {
@@ -617,17 +689,25 @@ export const TorusFourBoards = ({
     e.preventDefault()
     e.stopPropagation()
 
+    stopMomentum()
+
+    const t0 = performance.now()
     panDragRef.current = {
       pointerId: e.pointerId,
       startX: e.clientX,
       startY: e.clientY,
       panAtStart: { ...panPxRef.current },
       moved: false,
+      prevClientX: e.clientX,
+      prevClientY: e.clientY,
+      prevTime: t0,
+      velocityX: 0,
+      velocityY: 0,
     }
 
     e.currentTarget.setPointerCapture(e.pointerId)
     e.currentTarget.classList.add('torus-pan-dragging')
-  }, [])
+  }, [stopMomentum])
 
   const onPointerMove = useCallback(
     (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -645,6 +725,19 @@ export const TorusFourBoards = ({
       const totalDy = e.clientY - s.startY
       const distSq = totalDx * totalDx + totalDy * totalDy
       if (distSq >= PAN_THRESHOLD_PX * PAN_THRESHOLD_PX) s.moved = true
+
+      const t = performance.now()
+      const dt = t - s.prevTime
+      if (dt > 5 && dt < 90) {
+        const ix = (e.clientX - s.prevClientX) / dt
+        const iy = (e.clientY - s.prevClientY) / dt
+        const blend = 0.5
+        s.velocityX = blend * s.velocityX + (1 - blend) * ix
+        s.velocityY = blend * s.velocityY + (1 - blend) * iy
+      }
+      s.prevClientX = e.clientX
+      s.prevClientY = e.clientY
+      s.prevTime = t
 
       const rawX = s.panAtStart.x + totalDx
       const rawY = s.panAtStart.y + totalDy
@@ -665,6 +758,8 @@ export const TorusFourBoards = ({
       const s = panDragRef.current
       if (!s || s.pointerId !== e.pointerId) return
 
+      const { moved, velocityX, velocityY } = s
+
       try {
         e.currentTarget.releasePointerCapture(e.pointerId)
       } catch {
@@ -673,14 +768,17 @@ export const TorusFourBoards = ({
       e.currentTarget.classList.remove('torus-pan-dragging')
       panDragRef.current = null
 
-      if (!s.moved) {
+      if (!moved) {
         for (const api of apisRef.current) {
           api?.selectSquare(null)
         }
         setSelectedCanonical(null)
+        return
       }
+
+      startMomentum(velocityX, velocityY)
     },
-    [setSelectedCanonical],
+    [setSelectedCanonical, startMomentum],
   )
 
   const onPointerUp = useCallback(
