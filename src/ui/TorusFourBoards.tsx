@@ -8,6 +8,7 @@ import {
   type MutableRefObject,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
+import { createPortal } from 'react-dom'
 import { Chessground } from 'chessground'
 import type { Api } from 'chessground/api'
 import * as cgBoard from 'chessground/board'
@@ -836,28 +837,31 @@ export const TorusFourBoards = ({
           }}
         />
       ))}
-      {promotionActive ? (
-        <div
-          className="torus-promotion-overlay"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Choose promotion piece"
-        >
-          <div className="torus-promotion-panel">
-            {promotionLabels.map(({ role, label }) => (
-              <button
-                key={role}
-                type="button"
-                className="torus-promotion-btn"
-                aria-label={`Promote to ${role}`}
-                onClick={() => finishPromotion(role)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
+      {promotionActive
+        ? createPortal(
+            <div
+              className="torus-promotion-overlay"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Choose promotion piece"
+            >
+              <div className="torus-promotion-panel">
+                {promotionLabels.map(({ role, label }) => (
+                  <button
+                    key={role}
+                    type="button"
+                    className="torus-promotion-btn"
+                    aria-label={`Promote to ${role}`}
+                    onClick={() => finishPromotion(role)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
     </div>
   )
 }
