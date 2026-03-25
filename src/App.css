@@ -28,6 +28,54 @@
   margin: 0.75rem 0 0;
 }
 
+.app-header-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.app-about-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: auto;
+}
+
+.app-about-wrap .app-button {
+  cursor: help;
+}
+
+.app-about-panel {
+  position: absolute;
+  top: calc(100% - 4px);
+  right: 0;
+  z-index: 55;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  width: min(22rem, calc(100vw - 3rem));
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: #cbd5e1;
+  text-align: left;
+  background: #1e293b;
+  border: 1px solid #475569;
+  border-radius: 10px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  transition: opacity 0.12s ease, visibility 0.12s ease;
+}
+
+.app-about-wrap:hover .app-about-panel,
+.app-about-wrap:focus-within .app-about-panel {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .app-new-game-wrap {
   position: relative;
   display: inline-flex;

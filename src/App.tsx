@@ -89,65 +89,78 @@ function GameShell() {
       ? 'Vs human: two players; the URL and local storage keep the position in this browser (share the link to resume elsewhere).'
       : 'Vs bot: you play White; a simple random-move bot plays Black.'
 
+  const torusAboutText =
+    'Chess on a doughnut: the board wraps on all sides, so a rook can fall off one edge and reappear on the other. This variant uses a custom opening setup—two armies face each other on the torus with familiar pieces and rules adapted to the wrap.'
+
   return (
     <main className="app-shell">
       <header className="app-header">
-        <h1>Torus Chess</h1>
-        <p>
-          Chess on a doughnut: the board wraps on all sides, so a rook can fall off one edge and
-          reappear on the other. This variant uses a custom opening setup—two armies face each other
-          on the torus with familiar pieces and rules adapted to the wrap.
-        </p>
+        <h1>Torus Chess: ♟️ on a 🍩</h1>
         <p className="app-mode-line">{modeDescription}</p>
         <div className="app-actions">
-          <div
-            className="app-new-game-wrap"
-            ref={newGameWrapRef}
-            onMouseEnter={() => setNewGameMenuOpen(true)}
-            onMouseLeave={() => setNewGameMenuOpen(false)}
-          >
-            <button
-              type="button"
-              ref={newGameTriggerRef}
-              className="app-button"
-              aria-expanded={newGameMenuOpen}
-              aria-haspopup="true"
-              aria-controls="new-game-options"
-              onClick={() => setNewGameMenuOpen((o) => !o)}
+          <div className="app-header-actions-row">
+            <div
+              className="app-new-game-wrap"
+              ref={newGameWrapRef}
+              onMouseEnter={() => setNewGameMenuOpen(true)}
+              onMouseLeave={() => setNewGameMenuOpen(false)}
             >
-              New game
-            </button>
-            {newGameMenuOpen ? (
-              <div
-                id="new-game-options"
-                className="app-new-game-panel"
-                role="group"
-                aria-label="New game options"
+              <button
+                type="button"
+                ref={newGameTriggerRef}
+                className="app-button"
+                aria-expanded={newGameMenuOpen}
+                aria-haspopup="true"
+                aria-controls="new-game-options"
+                onClick={() => setNewGameMenuOpen((o) => !o)}
               >
-                <button
-                  type="button"
-                  className="app-button app-new-game-option"
-                  aria-label="Vs human"
-                  onClick={() => {
-                    setNewGameMenuOpen(false)
-                    startNewGame('human')
-                  }}
+                New game
+              </button>
+              {newGameMenuOpen ? (
+                <div
+                  id="new-game-options"
+                  className="app-new-game-panel"
+                  role="group"
+                  aria-label="New game options"
                 >
-                  👤⚔️👤
-                </button>
-                <button
-                  type="button"
-                  className="app-button app-new-game-option"
-                  aria-label="Vs bot"
-                  onClick={() => {
-                    setNewGameMenuOpen(false)
-                    startNewGame('bot')
-                  }}
-                >
-                  👤⚔️🤖
-                </button>
+                  <button
+                    type="button"
+                    className="app-button app-new-game-option"
+                    aria-label="Vs human"
+                    onClick={() => {
+                      setNewGameMenuOpen(false)
+                      startNewGame('human')
+                    }}
+                  >
+                    👤⚔️👤
+                  </button>
+                  <button
+                    type="button"
+                    className="app-button app-new-game-option"
+                    aria-label="Vs bot"
+                    onClick={() => {
+                      setNewGameMenuOpen(false)
+                      startNewGame('bot')
+                    }}
+                  >
+                    👤⚔️🤖
+                  </button>
+                </div>
+              ) : null}
+            </div>
+            <div className="app-about-wrap">
+              <button
+                type="button"
+                className="app-button"
+                aria-label="What is torus chess?"
+                aria-describedby="torus-about-text"
+              >
+                ?
+              </button>
+              <div id="torus-about-text" className="app-about-panel" role="tooltip">
+                {torusAboutText}
               </div>
-            ) : null}
+            </div>
           </div>
         </div>
       </header>
