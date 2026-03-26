@@ -11,18 +11,19 @@ export function modCentered(n: number, m: number): number {
 }
 
 /**
- * Wrap pan.x so CSS total X translate stays near one torus period. `FIXED_X_TRANSLATE_CELLS` is
- * the sum of the base centering term and `--initial-pan-x` (see App.css).
+ * Wrap pan.x so CSS total X translate stays near one torus period. Full translate in px is
+ * `FIXED_X_TRANSLATE_CELLS * cellPx + panX` (matches App.css). Valid totals keep a 16-cell-wide
+ * grid covering a 9-cell viewport: grid left edge in [−7, 0] cell widths → [−7·cellPx, 0].
  */
 export function modPanXForTorus(panX: number, wrapX: number): number {
   const cellPx = wrapX / 8
-  const biasPx = FIXED_X_TRANSLATE_CELLS * cellPx
-  const loPx = (VIEWPORT_CELLS - TILES_PER_SIDE) * cellPx
-  const hiPx = FIXED_X_TRANSLATE_CELLS * cellPx
-  const centerPx = (loPx + hiPx) / 2
-  const totalPx = biasPx + panX
+  const staticTxPx = FIXED_X_TRANSLATE_CELLS * cellPx
+  const minTotalPx = (VIEWPORT_CELLS - TILES_PER_SIDE) * cellPx
+  const maxTotalPx = 0
+  const centerPx = (minTotalPx + maxTotalPx) / 2
+  const totalPx = staticTxPx + panX
   const wrapped = modCentered(totalPx - centerPx, wrapX) + centerPx
-  return wrapped - biasPx
+  return wrapped - staticTxPx
 }
 
 /** Layout size (subpixel) so one 8-cell wrap matches the painted CSS grid period. */

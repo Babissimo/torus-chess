@@ -1,31 +1,79 @@
 :root {
   /* Same behind masked board edges and the frame so the vignette doesn’t read as “black” */
   --board-chrome: #1e293b;
+  /* Sidebar only when clearly wider than tall (below); square / portrait → stacked layout & wide board. */
+  --app-sidebar-width: clamp(15.5rem, 26vw, 22rem);
 }
 
 .app-shell {
-  max-width: 960px;
-  margin: 0 auto;
-  min-height: 100vh;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1.5rem;
+  gap: 0.65rem;
+  padding: 0.5rem 0.5rem;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* ≥ 4:3 landscape: sidebar + board. Square (1:1) and portrait use stacked header + full-width board area. */
+@media (min-aspect-ratio: 4/3) {
+  .app-shell {
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0.85rem;
+    padding: 0.65rem 0.85rem;
+  }
+
+  .app-header {
+    flex: 0 0 var(--app-sidebar-width);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .app-header-actions-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .app-new-game-wrap,
+  .app-about-wrap {
+    width: 100%;
+  }
+
+  .app-about-wrap {
+    margin-left: 0;
+    align-items: flex-start;
+  }
+
+  .app-about-panel {
+    left: 0;
+    right: auto;
+    width: min(22rem, 100%);
+  }
+
+  .board-frame {
+    padding: 0.65rem;
+  }
+}
+
+.app-header {
+  flex-shrink: 0;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .app-header h1 {
   margin: 0;
-  font-size: 1.6rem;
+  font-size: clamp(1.15rem, 2.6vmin, 1.6rem);
   color: #f1f5f9;
-}
-
-.app-header p {
-  margin: 0.4rem 0 0;
-  color: #94a3b8;
+  line-height: 1.2;
 }
 
 .app-actions {
-  margin: 0.75rem 0 0;
+  margin: 0.5rem 0 0;
 }
 
 .app-header-actions-row {
@@ -55,7 +103,7 @@
   visibility: hidden;
   opacity: 0;
   pointer-events: none;
-  width: min(22rem, calc(100vw - 3rem));
+  width: min(22rem, 100%);
   margin: 0;
   padding: 0.65rem 0.75rem;
   font-size: 0.875rem;
@@ -107,12 +155,6 @@
   font-size: 1.25rem;
 }
 
-.app-mode-line {
-  margin: 0.5rem 0 0;
-  color: #cbd5e1;
-  font-size: 0.9rem;
-}
-
 .app-button {
   cursor: pointer;
   padding: 0.4rem 0.75rem;
@@ -132,66 +174,73 @@
   color: #cbd5e1;
 }
 
+/* Fills leftover shell space; inscribes a square .board-frame in the center. */
+.board-chrome-wrap {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  container-type: size;
+  container-name: board-chrome-wrap;
+}
+
 .board-frame {
   background: var(--board-chrome);
   border: 1px solid #334155;
   border-radius: 12px;
-  padding: 1rem;
+  padding: 0.5rem;
   box-sizing: border-box;
-  /* Keep the viewport centered when its max width is larger than this inner width */
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  /* Outer chrome is a square: largest side that fits in the wrap. */
+  width: min(100cqw, 100cqh);
+  height: min(100cqw, 100cqh);
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 1;
 }
 
-/* Shows --squares-visible × --squares-visible chess square cells; viewport is 9×9 so a 2×2 of
-   8×8 boards (16×16 cells) always covers it when pan is wrapped mod one board (8 cells). */
+/* Inner area of the square frame; viewport is absolutely filled. */
+.board-slot {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+}
+
+/* --squares-visible: 9 cells span the viewport edge; one 8×8 board = 8/9 of that (--cell = 100cqmin/9). */
 .board-viewport {
   --squares-visible: 9;
   --tiles-per-side: 16; /* 2 × 8 cells; one Chessground per torus board */
   /*
-    Edge mask (see .board-layer): outer rim fully transparent, then linear ramp to opaque.
+    Edge mask: outer rim fully transparent, then linear ramp to opaque.
     --board-fade-clear: fully transparent band from each rim inward.
     --board-fade-ramp: next band; linear gradient from transparent → opaque (mask).
   */
   --board-fade-clear: 5%;
   --board-fade-ramp: 5%;
-  /* Never wider than the frame content box (avoids vw vs parent mismatch → looks shifted right) */
-  --board-size: min(100%, min(96vw, 900px));
+  /*
+    Fills the square inner area of .board-frame (after padding).
+    (--cell on .torus-four-grid uses 100cqmin against this element as container.)
+  */
 
-  margin: 0 auto;
-  width: var(--board-size);
-  height: var(--board-size);
-  max-width: min(100%, 900px);
-  max-height: 900px;
-  aspect-ratio: 1;
+  position: absolute;
+  inset: 0;
   box-sizing: border-box;
   overflow: hidden;
   border-radius: 8px;
   /* Must match frame: masked-out board pixels show this, not a darker near-black */
   background: var(--board-chrome);
-  position: relative;
-  flex-shrink: 0;
+  /* Absolute so it fills the square .board-slot; still a positioning context for the grid. */
   /* Lets children use cq* against the *used* box (matches clipping after max-width / layout) */
   container-type: size;
   container-name: board-viewport;
-}
 
-.board-layer {
-  /*
-    Cell size must track the actual clip rect, not --board-size: width/height can be clamped by
-    max-width/max-height while --board-size still resolves larger → grid/translate drift.
-  */
-  /* (10/9)*(8/9) = 80/81: base bump minus 8/9 so 2×2 boards aren’t 9/8 oversized vs the viewport */
-  --torus-cell-scale: calc(80 / 81);
-  --cell: calc(100cqmin * var(--torus-cell-scale) / var(--squares-visible));
-
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  border-radius: inherit;
-
-  /* Vignette: clear rim + linear ramp (variables on .board-viewport) */
+  /* Vignette: clear rim + linear ramp (variables above) */
   -webkit-mask-image:
     linear-gradient(
       to right,
@@ -241,10 +290,12 @@
 
 .torus-four-grid {
   touch-action: none;
-  /* Default view: viewport center on the horizontal seam between upper/lower boards (mid-left),
-     not on the four-board corner at (8,8). Base translate is −3.5 cells; +4 cells → 0.5 cell X. */
-  --initial-pan-x: calc(4 * var(--cell));
-  --initial-pan-y: 0px;
+  /* One board = 8 cells = 8/9 of the viewport min side (9 cells = full viewport edge). */
+  --cell: calc(100cqmin / 9);
+  /* Default view: horizontal seam between upper/lower boards at mid-viewport; static X translate
+     must stay ≤0 so the 16-cell grid always covers the 9-cell clip (no left chrome gap). */
+  --initial-pan-x: calc(3.5 * var(--cell));
+  --initial-pan-y: calc(0.5 * var(--cell));
   display: grid;
   /* Explicit 8×8-cell tiles so track sizes match --cell (avoids 1fr subpixel drift vs translate) */
   grid-template-columns: repeat(2, calc(8 * var(--cell)));
@@ -273,6 +324,11 @@
 .torus-four-grid.torus-pan-dragging {
   cursor: grabbing;
   user-select: none;
+}
+
+/* Cross-tile drag: Chessground’s high z-index only applies inside each .cg-wrap; raise the origin tile so the piece isn’t painted under sibling boards. */
+.torus-four-grid .torus-cell.cg-wrap:has(piece.dragging) {
+  z-index: 20;
 }
 
 .torus-cell.cg-wrap {

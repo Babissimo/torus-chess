@@ -4,10 +4,10 @@ export const TILES_PER_SIDE = 16
 export const VIEWPORT_CELLS = 9
 /**
  * Matches `--initial-pan-x: calc(N * var(--cell))` on `.torus-four-grid` (cell count on X).
- * Wrapping must use the same fixed offset as CSS or pan hits totals where the 9-cell viewport
- * sticks out past the 16-cell grid (empty band ~½ viewport).
+ * With base centering (VIEWPORT−TILES)/2 = −3.5, use 3.5 so net static X = 0 and the viewport
+ * stays tile-filled; wrapping uses the same total in `modPanXForTorus`.
  */
-export const INITIAL_PAN_X_CELLS = 4
+export const INITIAL_PAN_X_CELLS = 3.5
 
 export const FIXED_X_TRANSLATE_CELLS =
   (VIEWPORT_CELLS - TILES_PER_SIDE) / 2 + INITIAL_PAN_X_CELLS

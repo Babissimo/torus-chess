@@ -86,11 +86,6 @@ function GameShell() {
     return <Navigate to={DEFAULT_GAME_PATHNAME} replace />
   }
 
-  const modeDescription =
-    gameMode === 'human'
-      ? 'Vs human: two players; the URL and local storage keep the position in this browser (share the link to resume elsewhere).'
-      : 'Vs bot: you play White; a simple random-move bot plays Black.'
-
   const torusAboutText =
     'Chess on a doughnut: the board wraps on all sides, so a rook can fall off one edge and reappear on the other. This variant uses a custom opening setup—two armies face each other on the torus with familiar pieces and rules adapted to the wrap.'
 
@@ -98,7 +93,6 @@ function GameShell() {
     <main className="app-shell">
       <header className="app-header">
         <h1>Torus Chess: ♟️ on a 🍩</h1>
-        <p className="app-mode-line">{modeDescription}</p>
         <div className="app-actions">
           <div className="app-header-actions-row">
             <div
@@ -166,18 +160,20 @@ function GameShell() {
           </div>
         </div>
       </header>
-      <section className="board-frame">
-        <div className="board-viewport">
-          <div className="board-layer">
-            <TorusFourBoards
-              key={boardKey}
-              mode={gameMode}
-              snapshot={parsed}
-              onSnapshotChange={syncUrl}
-            />
+      <div className="board-chrome-wrap">
+        <section className="board-frame">
+          <div className="board-slot">
+            <div className="board-viewport">
+              <TorusFourBoards
+                key={boardKey}
+                mode={gameMode}
+                snapshot={parsed}
+                onSnapshotChange={syncUrl}
+              />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
   )
 }
