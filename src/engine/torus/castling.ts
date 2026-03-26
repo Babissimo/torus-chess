@@ -3,9 +3,9 @@ import { key2pos, pos2key } from 'chessground/util'
 import { opposite } from 'chessground/util'
 import type { CastlingRights } from './castlingTypes'
 
-function kingKeyOf(pieces: Pieces, side: Color): Key | undefined {
+export function findKingKey(pieces: Pieces, color: Color): Key | undefined {
   for (const [k, p] of pieces) {
-    if (p.color === side && p.role === 'king') return k
+    if (p.color === color && p.role === 'king') return k
   }
   return undefined
 }
@@ -90,7 +90,7 @@ export function legalCastlingDests(
 ): Key[] {
   const out: Key[] = []
   const opp = opposite(side)
-  const kk = kingKeyOf(pieces, side)
+  const kk = findKingKey(pieces, side)
   if (!kk || kingInCheck) return out
   const kpos = key2pos(kk)
   if (kpos[0] !== E_FILE) return out

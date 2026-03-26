@@ -29,8 +29,10 @@ function persistedToSnapshot(p: {
 }
 
 function HomeRedirect() {
-  const saved = loadLocalGame('human')
-  const to = saved ? buildGamePathname(persistedToSnapshot(saved)) : DEFAULT_GAME_PATHNAME
+  const to = useMemo(() => {
+    const saved = loadLocalGame('human')
+    return saved ? buildGamePathname(persistedToSnapshot(saved)) : DEFAULT_GAME_PATHNAME
+  }, [])
   return <Navigate to={to} replace />
 }
 

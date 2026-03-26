@@ -4,32 +4,21 @@ import { read, write } from 'chessground/fen'
 import type { FEN } from 'chessground/types'
 import type { CastlingRights } from './castlingTypes'
 import {
+  findKingKey,
   legalCastlingDests,
   updateCastlingRights,
 } from './castling'
 import {
   applyTorusMove,
   isPawnPromotionSquare,
+  isSquareAttacked,
   pseudoLegalDests,
+  pseudoLegalDestsForSquare,
 } from './pseudoLegal'
 
 const PROMOTION_ROLES: Role[] = ['queen', 'rook', 'bishop', 'knight']
 
-export function findKingKey(pieces: Pieces, color: Color): Key | undefined {
-  for (const [k, p] of pieces) {
-    if (p.color === color && p.role === 'king') return k
-  }
-  return undefined
-}
-
-/** True if `target` is attacked by any piece of `byColor`. (No castling as “attacks”.) */
-export function isSquareAttacked(pieces: Pieces, target: Key, byColor: Color): boolean {
-  const pseudo = pseudoLegalDests(pieces, byColor)
-  for (const destList of pseudo.values()) {
-    if (destList.includes(target)) return true
-  }
-  return false
-}
+export { isSquareAttacked } from './pseudoLegal'
 
 export function inCheck(pieces: Pieces, side: Color): boolean {
   const king = findKingKey(pieces, side)
@@ -63,7 +52,8 @@ export function legalDests(
   for (const [from, tos] of pseudo) {
     const ok: Key[] = []
     for (const to of tos) {
-      if (isPawnPromotionSquare(pieces, from, to, side)) {
+      const promotion = isPawnPromotionSquare(pieces, from, to, side)
+      if (promotion) {
         let anyLegal = false
         for (const pr of PROMOTION_ROLES) {
           const after = applyTorusMove(pieces, from, to, pr)
@@ -101,11 +91,28 @@ export function tryApplyLegalMove(
   promoteTo: Role = 'queen',
 ): { fen: FEN; pieces: Pieces; rights: CastlingRights } | null {
   const pieces = read(fen)
-  const allowed = legalDests(pieces, side, rights).get(orig)
-  if (!allowed?.includes(dest)) return null
   const piece = pieces.get(orig)
-  if (!piece) return null
-  const next = isPawnPromotionSquare(pieces, orig, dest, side)
+  if (!piece || piece.color !== side) return null
+
+  let tos = pseudoLegalDestsForSquare(pieces, orig, piece)
+  if (piece.role === 'king') {
+    const castle = legalCastlingDests(
+      pieces,
+      side,
+      rights,
+      isSquareAttacked,
+      inCheck(pieces, side),
+    )
+    if (castle.length) {
+      const merged = new Set<Key>(tos)
+      for (const c of castle) merged.add(c)
+      tos = [...merged]
+    }
+  }
+  if (!tos.includes(dest)) return null
+
+  const promotion = isPawnPromotionSquare(pieces, orig, dest, side)
+  const next = promotion
     ? applyTorusMove(pieces, orig, dest, promoteTo)
     : applyTorusMove(pieces, orig, dest)
   if (inCheck(next, side)) return null

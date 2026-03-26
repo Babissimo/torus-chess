@@ -5,19 +5,19 @@ export {
   applyCastlingOnBoard,
   deriveCastlingFromBoard,
   emptyCastlingRights,
+  findKingKey,
   initialCastlingRights,
   isCastlingMove,
 } from './castling'
 export {
   applyTorusMove,
   isPawnPromotionSquare,
+  isSquareAttacked,
   pseudoLegalDests,
   promotionRankIndex,
 } from './pseudoLegal'
 export {
-  findKingKey,
   inCheck,
-  isSquareAttacked,
   legalDests,
   legalDestsFromFen,
   tryApplyLegalMove,

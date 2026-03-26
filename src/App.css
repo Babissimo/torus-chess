@@ -182,7 +182,8 @@
     Cell size must track the actual clip rect, not --board-size: width/height can be clamped by
     max-width/max-height while --board-size still resolves larger → grid/translate drift.
   */
-  --torus-cell-scale: calc(10 / 9); /* each mini-board side is 10/9 of the previous size */
+  /* (10/9)*(8/9) = 80/81: base bump minus 8/9 so 2×2 boards aren’t 9/8 oversized vs the viewport */
+  --torus-cell-scale: calc(80 / 81);
   --cell: calc(100cqmin * var(--torus-cell-scale) / var(--squares-visible));
 
   position: absolute;
@@ -240,7 +241,9 @@
 
 .torus-four-grid {
   touch-action: none;
-  --initial-pan-x: 0px;
+  /* Default view: viewport center on the horizontal seam between upper/lower boards (mid-left),
+     not on the four-board corner at (8,8). Base translate is −3.5 cells; +4 cells → 0.5 cell X. */
+  --initial-pan-x: calc(4 * var(--cell));
   --initial-pan-y: 0px;
   display: grid;
   /* Explicit 8×8-cell tiles so track sizes match --cell (avoids 1fr subpixel drift vs translate) */

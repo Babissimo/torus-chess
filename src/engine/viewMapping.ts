@@ -1,3 +1,8 @@
+/**
+ * Maps the 2×2 repeating torus viewport to “canonical” board coordinates.
+ * Today every function is identity on square keys: all mini-boards use the same labels, and
+ * wrap rules live in the engine. These helpers stay so future per-window offsets stay localized.
+ */
 import type { Key } from 'chessground/types'
 
 export const BOARD_OFFSETS = [-1, 0] as const
