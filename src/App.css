@@ -24,6 +24,8 @@
     align-items: stretch;
     gap: 0.85rem;
     padding: 0.65rem 0.85rem;
+    /* cqw/cqh for .app-header insets (nearest query container for this element) */
+    container-type: size;
   }
 
   .app-header {
@@ -31,21 +33,31 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
+    min-height: 0;
+    /* Same vertical inset as chrome above/below centered board-frame: align title top & button row bottom */
+    --app-board-chrome-inset-y: calc(
+      (100cqh - min(100cqh, calc(100cqw - var(--app-sidebar-width) - 0.85rem))) / 2
+    );
+    padding-top: var(--app-board-chrome-inset-y);
+    padding-bottom: var(--app-board-chrome-inset-y);
   }
 
   .app-header-actions-row {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    width: 100%;
   }
 
   .app-new-game-wrap,
   .app-about-wrap {
-    width: 100%;
+    width: auto;
+    flex: 0 0 auto;
   }
 
-  .app-about-wrap {
-    margin-left: 0;
-    align-items: flex-start;
+  .app-actions {
+    width: 100%;
+    align-self: stretch;
   }
 
   .app-about-panel {
@@ -85,11 +97,24 @@
   margin: 0.5rem 0 0;
 }
 
+/* After base .app-actions so margin-top: auto wins in sidebar layout */
+@media (min-aspect-ratio: 4/3) {
+  .app-header .app-actions {
+    margin-top: auto;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+  }
+}
+
 .app-header-actions-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem 0.75rem;
+  justify-content: flex-start;
+  gap: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .app-about-wrap {
@@ -98,6 +123,12 @@
   flex-direction: column;
   align-items: flex-end;
   margin-left: auto;
+}
+
+@media (min-aspect-ratio: 4/3) {
+  .app-about-wrap {
+    align-items: flex-start;
+  }
 }
 
 .app-about-wrap .app-button {
@@ -190,10 +221,30 @@
   min-height: 0;
   width: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0.65rem;
   container-type: size;
   container-name: board-chrome-wrap;
+}
+
+/* Stacked: actions sit above board; same width as board-frame (min of chrome w/h) */
+.board-chrome-wrap > .app-actions {
+  margin: 0;
+  width: min(100cqw, 100cqh);
+  max-width: 100%;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+@media (min-aspect-ratio: 4/3) {
+  .board-chrome-wrap {
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: stretch;
+    gap: 0;
+  }
 }
 
 .board-frame {

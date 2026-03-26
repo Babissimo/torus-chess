@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import './App.css'
 import { TorusFourBoards } from './ui/TorusFourBoards'
@@ -36,12 +43,27 @@ function HomeRedirect() {
   return <Navigate to={to} replace />
 }
 
+const SIDEBAR_LAYOUT_MQ = '(min-aspect-ratio: 4/3)'
+
+function useSidebarBoardLayout() {
+  const [sidebar, setSidebar] = useState(false)
+  useLayoutEffect(() => {
+    const mq = window.matchMedia(SIDEBAR_LAYOUT_MQ)
+    const sync = () => setSidebar(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+  return sidebar
+}
+
 function GameShell() {
   const [gameMode, setGameMode] = useState<GameMode>('human')
   const [boardKey, setBoardKey] = useState(0)
   const [newGameMenuOpen, setNewGameMenuOpen] = useState(false)
   const newGameWrapRef = useRef<HTMLDivElement>(null)
   const newGameTriggerRef = useRef<HTMLButtonElement>(null)
+  const sidebarBoardLayout = useSidebarBoardLayout()
   const loc = useLocation()
   const navigate = useNavigate()
 
@@ -89,78 +111,83 @@ function GameShell() {
   const torusAboutText =
     'Chess on a doughnut: the board wraps on all sides, so a rook can fall off one edge and reappear on the other. This variant uses a custom opening setup—two armies face each other on the torus with familiar pieces and rules adapted to the wrap.'
 
+  const gameActions = (
+    <div className="app-actions">
+      <div className="app-header-actions-row">
+        <div
+          className="app-new-game-wrap"
+          ref={newGameWrapRef}
+          onMouseEnter={() => setNewGameMenuOpen(true)}
+          onMouseLeave={() => setNewGameMenuOpen(false)}
+        >
+          <button
+            type="button"
+            ref={newGameTriggerRef}
+            className="app-button"
+            aria-expanded={newGameMenuOpen}
+            aria-haspopup="true"
+            aria-controls="new-game-options"
+            onClick={() => setNewGameMenuOpen((o) => !o)}
+          >
+            New game
+          </button>
+          {newGameMenuOpen ? (
+            <div
+              id="new-game-options"
+              className="app-new-game-panel"
+              role="group"
+              aria-label="New game options"
+            >
+              <button
+                type="button"
+                className="app-button app-new-game-option"
+                aria-label="Vs human"
+                onClick={() => {
+                  setNewGameMenuOpen(false)
+                  startNewGame('human')
+                }}
+              >
+                👤⚔️👤
+              </button>
+              <button
+                type="button"
+                className="app-button app-new-game-option"
+                aria-label="Vs bot"
+                onClick={() => {
+                  setNewGameMenuOpen(false)
+                  startNewGame('bot')
+                }}
+              >
+                👤⚔️🤖
+              </button>
+            </div>
+          ) : null}
+        </div>
+        <div className="app-about-wrap">
+          <button
+            type="button"
+            className="app-button"
+            aria-label="What is torus chess?"
+            aria-describedby="torus-about-text"
+          >
+            ?
+          </button>
+          <div id="torus-about-text" className="app-about-panel" role="tooltip">
+            {torusAboutText}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
   return (
     <main className="app-shell">
       <header className="app-header">
         <h1>Torus Chess: ♟️ on a 🍩</h1>
-        <div className="app-actions">
-          <div className="app-header-actions-row">
-            <div
-              className="app-new-game-wrap"
-              ref={newGameWrapRef}
-              onMouseEnter={() => setNewGameMenuOpen(true)}
-              onMouseLeave={() => setNewGameMenuOpen(false)}
-            >
-              <button
-                type="button"
-                ref={newGameTriggerRef}
-                className="app-button"
-                aria-expanded={newGameMenuOpen}
-                aria-haspopup="true"
-                aria-controls="new-game-options"
-                onClick={() => setNewGameMenuOpen((o) => !o)}
-              >
-                New game
-              </button>
-              {newGameMenuOpen ? (
-                <div
-                  id="new-game-options"
-                  className="app-new-game-panel"
-                  role="group"
-                  aria-label="New game options"
-                >
-                  <button
-                    type="button"
-                    className="app-button app-new-game-option"
-                    aria-label="Vs human"
-                    onClick={() => {
-                      setNewGameMenuOpen(false)
-                      startNewGame('human')
-                    }}
-                  >
-                    👤⚔️👤
-                  </button>
-                  <button
-                    type="button"
-                    className="app-button app-new-game-option"
-                    aria-label="Vs bot"
-                    onClick={() => {
-                      setNewGameMenuOpen(false)
-                      startNewGame('bot')
-                    }}
-                  >
-                    👤⚔️🤖
-                  </button>
-                </div>
-              ) : null}
-            </div>
-            <div className="app-about-wrap">
-              <button
-                type="button"
-                className="app-button"
-                aria-label="What is torus chess?"
-                aria-describedby="torus-about-text"
-              >
-                ?
-              </button>
-              <div id="torus-about-text" className="app-about-panel" role="tooltip">
-                {torusAboutText}
-              </div>
-            </div>
-          </div>
-        </div>
+        {sidebarBoardLayout ? gameActions : null}
       </header>
       <div className="board-chrome-wrap">
+        {!sidebarBoardLayout ? gameActions : null}
         <section className="board-frame">
           <div className="board-slot">
             <div className="board-viewport">
