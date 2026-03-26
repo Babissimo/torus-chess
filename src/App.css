@@ -51,7 +51,7 @@
   .app-about-panel {
     left: 0;
     right: auto;
-    width: min(22rem, 100%);
+    width: min(22rem, calc(100vw - 2rem));
   }
 
   .board-frame {
@@ -62,7 +62,8 @@
 .app-header {
   flex-shrink: 0;
   min-width: 0;
-  overflow: hidden;
+  /* Allow help tooltip (.app-about-panel) to paint below the header; width uses vw not % of the ? wrap */
+  overflow: visible;
 }
 
 .app-header h1 {
@@ -70,6 +71,14 @@
   font-size: clamp(1.15rem, 2.6vmin, 1.6rem);
   color: #f1f5f9;
   line-height: 1.2;
+  /* Stacked header (title above board); sidebar left-align comes in a later @media (see below) */
+  text-align: center;
+}
+
+@media (min-aspect-ratio: 4/3) {
+  .app-header h1 {
+    text-align: left;
+  }
 }
 
 .app-actions {
@@ -103,7 +112,7 @@
   visibility: hidden;
   opacity: 0;
   pointer-events: none;
-  width: min(22rem, 100%);
+  width: min(22rem, calc(100vw - 2rem));
   margin: 0;
   padding: 0.65rem 0.75rem;
   font-size: 0.875rem;
