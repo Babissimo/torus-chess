@@ -144,12 +144,11 @@
   align-items: center;
 }
 
-/* Shows exactly --squares-visible × --squares-visible chess squares (100 by default).
-   The logical 2×2 torus is repeated 4×4 on a 32×32 cell grid so panning (8-cell period) never
-   leaves a viewport edge uncovered. Chessground coordinates: false. */
+/* Shows --squares-visible × --squares-visible chess square cells; viewport is 9×9 so a 2×2 of
+   8×8 boards (16×16 cells) always covers it when pan is wrapped mod one board (8 cells). */
 .board-viewport {
-  --squares-visible: 10;
-  --tiles-per-side: 32; /* 4 × 8 cells; 4×4 mega-cells repeating the 2×2 pattern */
+  --squares-visible: 9;
+  --tiles-per-side: 16; /* 2 × 8 cells; one Chessground per torus board */
   /*
     Edge mask (see .board-layer): outer rim fully transparent, then linear ramp to opaque.
     --board-fade-clear: fully transparent band from each rim inward.
@@ -241,13 +240,12 @@
 
 .torus-four-grid {
   touch-action: none;
-  /* Start at midpoint of a vertical pair edge, not the 4-board corner intersection. */
-  --initial-pan-x: calc(3 * var(--cell));
+  --initial-pan-x: 0px;
   --initial-pan-y: 0px;
   display: grid;
   /* Explicit 8×8-cell tiles so track sizes match --cell (avoids 1fr subpixel drift vs translate) */
-  grid-template-columns: repeat(4, calc(8 * var(--cell)));
-  grid-template-rows: repeat(4, calc(8 * var(--cell)));
+  grid-template-columns: repeat(2, calc(8 * var(--cell)));
+  grid-template-rows: repeat(2, calc(8 * var(--cell)));
   gap: 0;
   width: calc(var(--tiles-per-side) * var(--cell));
   height: calc(var(--tiles-per-side) * var(--cell));

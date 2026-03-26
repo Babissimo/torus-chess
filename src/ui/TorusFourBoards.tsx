@@ -39,14 +39,12 @@ import type { GameSnapshot } from '../state/gameUrl'
 const HIGHLIGHT_CLASS = 'torus-selected'
 
 /** Matches `--tiles-per-side` on `.board-viewport` (cells per grid axis). */
-const TILES_PER_SIDE = 32
+const TILES_PER_SIDE = 16
 
 /**
- * 4×4 slots of 8×8 cells; each slot maps to logical torus board 0..3 (repeating 2×2 pattern).
+ * 2×2 slots of 8×8 cells; one Chessground per logical torus board 0..3 (row-major).
  */
-const TORUS_SLOT_BOARD_INDEX = [
-  0, 1, 0, 1, 2, 3, 2, 3, 0, 1, 0, 1, 2, 3, 2, 3,
-] as const
+const TORUS_SLOT_BOARD_INDEX = [0, 1, 2, 3] as const
 
 /** Pixels before we treat pointer movement as pan (not a click). */
 const PAN_THRESHOLD_PX = 4
@@ -242,7 +240,7 @@ const TorusBoardCell = ({
       orientation: 'white',
       autoCastle: false,
       /* Coordinates reserve asymmetric strips (e.g. 12px ranks, 16px files) and break square
-         cells — viewport math then shows ~8 files × 10 ranks. */
+         cells — viewport math then shows ~9×9 square cells with 2×2 boards behind. */
       coordinates: false,
       turnColor,
       check: sideInCheck,
