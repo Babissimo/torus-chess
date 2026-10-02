@@ -11,7 +11,7 @@ npm run dev
 
 Open the URL Vite prints (default `http://localhost:5173/`). The app redirects into a game path under `/fen/…`.
 
-Production build and preview (uses base path `/torus-chess/` for GitHub Pages):
+Production build and preview:
 
 ```bash
 npm run build
@@ -20,7 +20,7 @@ npm run preview
 
 ## GitHub Pages
 
-The repo includes a workflow that builds and deploys the `dist` output. Set **Settings → Pages → Source: GitHub Actions**. The site expects to live at `https://<user>.github.io/torus-chess/` (see `vite.config.ts` `base` if your repo slug differs).
+The repo includes a workflow that builds and deploys the `dist` output. Set **Settings → Pages → Source: GitHub Actions**. The custom domain, `toruschess.babissimo.net`, is set under **Settings → Pages → Custom domain**. The build assumes it is served from the root of a domain; serving it under a path needs Vite's `base` set to that path.
 
 ## Game URL (current encoding)
 

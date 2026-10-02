@@ -7,9 +7,7 @@ import react from '@vitejs/plugin-react'
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => ({
-  // Dev at /fen/...; production at https://<user>.github.io/torus-chess/fen/...
-  base: mode === 'production' ? '/torus-chess/' : '/',
+export default defineConfig({
   plugins: [
     react(),
     {
@@ -20,4 +18,4 @@ export default defineConfig(({ mode }) => ({
       },
     },
   ],
-}))
+})
